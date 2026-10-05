@@ -5,3 +5,49 @@
 #    c. Modify the simulation for multiple worker threads.
 
 # ---
+
+import threading
+import time
+import random
+
+N = 10
+
+mutex = threading.Lock()
+empty = threading.Semaphore(N)
+full = threading.Semaphore(0)
+
+queue = []
+
+def dispatcher():
+    global queue
+    i = 0
+    while True:
+        
+        empty.acquire()
+
+        with mutex:
+            queue.append(i)
+
+        i+=1
+
+        full.release()
+
+def consumer():
+    global queue
+
+    while True:
+        full.acquire()
+
+        with mutex:
+            queue.pop(0)
+
+        empty.release()
+
+c = threading.Thread(target=consumer)
+d = threading.Thread(target=dispatcher)
+
+c.start()
+d.start()
+
+c.join()
+d.join()
